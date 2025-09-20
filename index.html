@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="مساعد البرمجة - مصحح الأكواد">
+    <meta property="og:description" content="موقع لتدقيق وتصحيح الأكواد البرمجية">
+    <meta property="og:image" content="https://i.imgur.com/3QZJ2Qy.png">
+    <meta property="og:url" content="https://programming-assistant.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <title>مساعد البرمجة - مصحح الأكواد</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --primary: #3498db;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --purple: #9b59b6;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #333;
+            padding: 15px;
+            min-height: 100vh;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        header {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        h1 {
+            color: var(--dark);
+            margin-bottom: 10px;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .logo {
+            color: var(--purple);
+            font-size: 2.2rem;
+        }
+        
+        .description {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .language-switcher {
+            margin-top: 15px;
+        }
+        
+        .lang-btn {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin: 0 5px;
+        }
+        
+        .lang-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--dark);
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+        
+        .card-title i {
+            color: var(--primary);
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        select, button {
+            padding: 14px 18px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            flex-grow: 1;
+            min-width: 130px;
+            transition: all 0.3s ease;
+        }
+        
+        select {
+            background-color: white;
+            border: 2px solid #ddd;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M8 12L2 6h12L8 12z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: calc(100% - 12px) center;
+            background-size: 12px;
+            padding-right: 40px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            font-weight: 500;
+        }
+        
+        select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        button {
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
+        #check-btn {
+            background-color: var(--success);
+        }
+        
+        #check-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        #run-btn {
+            background-color: var(--purple);
+        }
+        
+        #run-btn:hover {
+            background-color: #8e44ad;
+        }
+        
+        #clear-btn {
+            background-color: var(--danger);
+        }
+        
+        #clear-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        #share-btn {
+            background-color: var(--primary);
+        }
+        
+        #share-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .editor-container {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #eee;
+        }
+        
+        .CodeMirror {
+            height: 280px;
+            font-size: 16px;
+            direction: ltr;
+            font-family: 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
+            padding: 10px;
+        }
+        
+        .output-container {
+            margin-top: 20px;
+        }
+        
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .output-title {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            background-color: #eee;
+        }
+        
+        .status-ready {
+            background-color: #eee;
+            color: #333;
+        }
+        
+        .status-checking {
+            background-color: #ffeaa7;
+            color: #d35400;
+        }
+        
+        .status-success {
+            background-color: #d1f7c4;
+            color: #27ae60;
+        }
+        
+        .status-error {
+            background-color: #ffd1d1;
+            color: #c0392b;
+        }
+        
+        .output {
+            background-color: #2d3436;
+            color: #dfe6e9;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 150px;
+            font-family: 'Fira Code', monospace;
+            white-space: pre-wrap;
+            direction: ltr;
+            overflow: auto;
+            max-height: 350px;
+            line-height: 1.5;
+        }
+        
+        .error {
+            color: #ff7675;
+        }
+        
+        .success {
+            color: #55efc4;
+        }
+        
+        .warning {
+            color: #fdcb6e;
+        }
+        
+        .hint {
+            background: linear-gradient(to right, #fff4e6, #ffeacc);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 25px;
+            border-right: 4px solid #ffa94d;
+        }
+        
+        .hint h3 {
+            color: #e17055;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .hint p {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 1.05rem;
+        }
+        
+        .hint i {
+            color: #e17055;
+            font-size: 1.2rem;
+            margin-top: 3px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            font-size: 1rem;
+            opacity: 0.9;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .share-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .share-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background-color: white;
+            color: var(--dark);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 500;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+        
+        .share-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            color: var(--dark);
+        }
+        
+        .whatsapp { background-color: #25D366; color: white; }
+        .telegram { background-color: #0088cc; color: white; }
+        .twitter { background-color: #1DA1F2; color: white; }
+        
+        @media (min-width: 768px) {
+            .container {
+                max-width: 85%;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            button, select {
+                width: 100%;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--dark);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-code logo"></i> <span id="header-title">مساعد البرمجة</span></h1>
+            <p class="description" id="header-desc">صمم لك لتدقيق وتصحيح الأكواد البرمجية</p>
+            
+            <div class="language-switcher">
+                <button class="lang-btn active" id="lang-ar">العربية</button>
+                <button class="lang-btn" id="lang-en">English</button>
+            </div>
+        </header>
+        
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-edit"></i>
+                <span id="editor-title">محرر الأكواد</span>
+            </div>
+            <div class="controls">
+                <select id="language">
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="html">HTML/CSS</option>
+                    <option value="java">Java</option>
+                    <option value="csharp">C#</option>
+                </select>
+                <button id="check-btn">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="check-text">فحص الأخطاء</span>
+                </button>
+                <button id="run-btn">
+                    <i class="fas fa-play-circle"></i>
+                    <span id="run-text">تشغيل الكود</span>
+                </button>
+                <button id="clear-btn">
+                    <i class="fas fa-trash-alt"></i>
+                    <span id="clear-text">مسح الكل</span>
+                </button>
+                <button id="share-btn">
+                    <i class="fas fa-share-alt"></i>
+                    <span id="share-text">مشاركة</span>
+                </button>
+            </div>
+            
+            <div class="editor-container">
+                <textarea id="code-editor"># اكتب الكود الخاص بك هنا
+def greet(name):
+    print("مرحباً", name)
+
+greet("مصمم الموقع")</textarea>
+            </div>
+        </div>
+        
+        <div class="card output-container">
+            <div class="output-header">
+                <div class="output-title">
+                    <i class="fas fa-terminal"></i>
+                    <span id="output-title">النتيجة:</span>
+                </div>
+                <div id="status" class="status-ready">جاهز</div>
+            </div>
+            <div class="output" id="output">ستظهر النتيجة هنا...</div>
+        </div>
+        
+        <div class="hint">
+            <h3>
+                <i class="fas fa-lightbulb"></i>
+                <span id="hint-title">نصائح للاستخدام:</span>
+            </h3>
+            <p>
+                <i class="fas fa-check"></i>
+                <span id="hint-1">اختر لغة البرمجة من القائمة المنسدلة</span>
+            </p>
+            <p>
+                <i class="fas fa-check"></i>
+                <span id="hint-2">اكتب الكود في منطقة التحرير</span>
+            </p>
+            <p>
+                <i class="fas fa-check"></i>
+                <span id="hint-3">اضغط على "فحص الأخطاء" للكشف عن الأخطاء</span>
+            </p>
+            <p>
+                <i class="fas fa-check"></i>
+                <span id="hint-4">اضغط على "تشغيل الكود" لتنفيذ الكود ومعرفة الناتج</span>
+            </p>
+        </div>
+        
+        <div class="share-buttons">
+            <a href="#" class="share-btn whatsapp" id="whatsapp-share">
+                <i class="fab fa-whatsapp"></i>
+                <span id="whatsapp-text">واتساب</span>
+            </a>
+            <a href="#" class="share-btn telegram" id="telegram-share">
+                <i class="fab fa-telegram"></i>
+                <span id="telegram-text">تيليجرام</span>
+            </a>
+            <a href="#" class="share-btn twitter" id="twitter-share">
+                <i class="fab fa-twitter"></i>
+                <span id="twitter-text">تويتر</span>
+            </a>
+        </div>
+        
+        <footer>
+            <p id="footer-text">تم التصميم للعمل بشكل مثالي - 2025</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast">تم نسخ الرابط!</div>
+
+    <script>
+        // بيانات الترجمة للغتين
+        const translations = {
+            ar: {
+                title: "مساعد البرمجة",
+                description: "صمم لك لتدقيق وتصحيح الأكواد البرمجية",
+                editorTitle: "محرر الأكواد",
+                check: "فحص الأخطاء",
+                run: "تشغيل الكود",
+                clear: "مسح الكل",
+                share: "مشاركة",
+                outputTitle: "النتيجة:",
+                hintTitle: "نصائح للاستخدام:",
+                hint1: "اختر لغة البرمجة من القائمة المنسدلة",
+                hint2: "اكتب الكود في منطقة التحرير",
+                hint3: "اضغط على \"فحص الأخطاء\" للكشف عن الأخطاء",
+                hint4: "اضغط على \"تشغيل الكود\" لتنفيذ الكود ومعرفة الناتج",
+                whatsapp: "واتساب",
+                telegram: "تيليجرام",
+                twitter: "تويتر",
+                footer: "تم التصميم للعمل بشكل مثالي - 2025",
+                ready: "جاهز",
+                checking: "جاري الفحص",
+                noErrors: "لا توجد أخطاء",
+                hasErrors: "تم اكتشاف أخطاء",
+                hasWarnings: "تم اكتشاف تحذيرات",
+                noCode: "لا يوجد كود",
+                running: "جاري التشغيل",
+                success: "تم التشغيل بنجاح",
+                copyLink: "تم نسخ الرابط إلى الحافظة!",
+                copyError: "تعذر نسخ الرابط، يمكنك مشاركته يدوياً",
+                shareText: "جرب مساعد البرمجة لتصحيح الأكواد: "
+            },
+            en: {
+                title: "Programming Assistant",
+                description: "Designed for reviewing and correcting code",
+                editorTitle: "Code Editor",
+                check: "Check Errors",
+                run: "Run Code",
+                clear: "Clear All",
+                share: "Share",
+                outputTitle: "Result:",
+                hintTitle: "Usage Tips:",
+                hint1: "Select programming language from dropdown",
+                hint2: "Write code in the editor area",
+                hint3: "Press \"Check Errors\" to detect errors",
+                hint4: "Press \"Run Code\" to execute code and see output",
+                whatsapp: "WhatsApp",
+                telegram: "Telegram",
+                twitter: "Twitter",
+                footer: "Designed to work perfectly - 2025",
+                ready: "Ready",
+                checking: "Checking",
+                noErrors: "No errors",
+                hasErrors: "Errors detected",
+                hasWarnings: "Warnings detected",
+                noCode: "No code",
+                running: "Running",
+                success: "Run successfully",
+                copyLink: "Link copied to clipboard!",
+                copyError: "Failed to copy link, you can share it manually",
+                shareText: "Try Programming Assistant for code correction: "
+            }
+        };
+
+        // تحديد اللغة الحالية
+        let currentLang = 'ar';
+        
+        // وظيفة تغيير اللغة
+        function changeLanguage(lang) {
+            currentLang = lang;
+            
+            // تحديث النصوص في الواجهة
+            document.getElementById('header-title').textContent = translations[lang].title;
+            document.getElementById('header-desc').textContent = translations[lang].description;
+            document.getElementById('editor-title').textContent = translations[lang].editorTitle;
+            document.getElementById('check-text').textContent = translations[lang].check;
+            document.getElementById('run-text').textContent = translations[lang].run;
+            document.getElementById('clear-text').textContent = translations[lang].clear;
+            document.getElementById('share-text').textContent = translations[lang].share;
+            document.getElementById('output-title').textContent = translations[lang].outputTitle;
+            document.getElementById('hint-title').textContent = translations[lang].hintTitle;
+            document.getElementById('hint-1').textContent = translations[lang].hint1;
+            document.getElementById('hint-2').textContent = translations[lang].hint2;
+            document.getElementById('hint-3').textContent = translations[lang].hint3;
+            document.getElementById('hint-4').textContent = translations[lang].hint4;
+            document.getElementById('whatsapp-text').textContent = translations[lang].whatsapp;
+            document.getElementById('telegram-text').textContent = translations[lang].telegram;
+            document.getElementById('twitter-text').textContent = translations[lang].twitter;
+            document.getElementById('footer-text').textContent = translations[lang].footer;
+            
+            // تحديث حالة الأزرار
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`lang-${lang}`).classList.add('active');
+            
+            // تحديث اتجاه الصفحة
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        }
+        
+        // تهيئة محرر الأكواد
+        var editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+            mode: 'python',
+            lineNumbers: true,
+            theme: 'default',
+            lineWrapping: true,
+            autocorrect: true,
+            indentUnit: 4,
+            tabSize: 4,
+            indentWithTabs: false,
+            electricChars: true,
+            autoCloseBrackets: true
+        });
+        
+        // أحداث أزرار تغيير اللغة
+        document.getElementById('lang-ar').addEventListener('click', () => changeLanguage('ar'));
+        document.getElementById('lang-en').addEventListener('click', () => changeLanguage('en'));
+        
+        // تحديث نمط المحرر بناء على لغة البرمجة المختارة
+        document.getElementById('language').addEventListener('change', function() {
+            const mode = this.value;
+            editor.setOption('mode', mode);
+        });
+        
+        // وظيفة فحص الأخطاء
+        document.getElementById('check-btn').addEventListener('click', function() {
+            const code = editor.getValue();
+            const language = document.getElementById('language').value;
+            checkCode(code, language);
+        });
+        
+        // وظيفة تشغيل الكود
+        document.getElementById('run-btn').addEventListener('click', function() {
+            const code = editor.getValue();
+            const language = document.getElementById('language').value;
+            runCode(code, language);
+        });
+        
+        // وظيفة مسح المحرر والمخرجات
+        document.getElementById('clear-btn').addEventListener('click', function() {
+            editor.setValue("");
+            document.getElementById('output').textContent = currentLang === 'ar' ? "ستظهر النتيجة هنا..." : "Result will appear here...";
+            setStatus(translations[currentLang].ready, "status-ready");
+        });
+        
+        // وظيفة المشاركة
+        document.getElementById('share-btn').addEventListener('click', function() {
+            // إنشاء رابط افتراضي
+            const url = "https://programming-assistant.html";
+            
+            // نسخ الرابط إلى الحافظة
+            navigator.clipboard.writeText(url).then(function() {
+                showToast(translations[currentLang].copyLink);
+            }).catch(function() {
+                showToast(translations[currentLang].copyError);
+            });
+        });
+        
+        // إعداد أزرار المشاركة
+        document.getElementById('whatsapp-share').addEventListener('click', function(e) {
+            e.preventDefault();
+            const text = translations[currentLang].shareText;
+            const url = "https://programming-assistant.html";
+            window.open(`https://wa.me/?text=${encodeURIComponent(text + url)}`, '_blank');
+        });
+        
+        document.getElementById('telegram-share').addEventListener('click', function(e) {
+            e.preventDefault();
+            const text = translations[currentLang].shareText;
+            const url = "https://programming-assistant.html";
+            window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
+        });
+        
+        document.getElementById('twitter-share').addEventListener('click', function(e) {
+            e.preventDefault();
+            const text = translations[currentLang].shareText;
+            const url = "https://programming-assistant.html";
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text + url)}`, '_blank');
+        });
+        
+        // وظيفة عرض الإشعارات
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // وظيفة تعيين حالة التطبيق
+        function setStatus(text, className) {
+            const status = document.getElementById('status');
+            status.textContent = text;
+            status.className = className;
+        }
+        
+        // محاكاة فحص الأخطاء مع تحديد مكان الخطأ
+        function checkCode(code, language) {
+            const output = document.getElementById('output');
+            
+            output.innerHTML = `<span class='success'>${currentLang === 'ar' ? 'جاري فحص الكود...' : 'Checking code...'}</span>`;
+            setStatus(translations[currentLang].checking, "status-checking");
+            
+            // محاكاة عملية الفحص
+            setTimeout(() => {
+                let result = "";
+                
+                // كشف الأخطاء بناء على محتوى الكود
+                const lines = code.split('\n');
+                let hasError = false;
+                let hasWarning = false;
+                
+                // كشف الأخطاء الشائعة
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    const lineNumber = i + 1;
+                    
+                    // كشف إذا كان السطر فارغاً
+                    if (line === "" && i !== lines.length - 1) {
+                        result += `<span class='warning'>${currentLang === 'ar' ? 'تحذير في السطر' : 'Warning at line'} ${lineNumber}: ${currentLang === 'ar' ? 'سطر فارغ' : 'Empty line'}</span>\n`;
+                        hasWarning = true;
+                    }
+                    
+                    // كشف الأخطاء في بايثون
+                    if (language === 'python') {
+                        if (line.includes('print(') && !line.includes(')')) {
+                            result += `<span class='error'>${currentLang === 'ar' ? 'خطأ في السطر' : 'Error at line'} ${lineNumber}: ${currentLang === 'ar' ? 'قوس غير مغلق في دالة print' : 'Unclosed parenthesis in print function'}</span>\n`;
+                            hasError = true;
+                        }
+                        if (line.includes('def ') && !line.includes('):')) {
+                            result += `<span class='error'>${currentLang === 'ar' ? 'خطأ في السطر' : 'Error at line'} ${lineNumber}: ${currentLang === 'ar' ? 'تعريف دالة ناقص' : 'Incomplete function definition'}</span>\n`;
+                            hasError = true;
+                        }
+                    }
+                    
+                    // كشف الأخطاء في الجافاسكريبت
+                    if (language === 'javascript') {
+                        if ((line.includes('function') || line.includes('if') || line.includes('for') || line.includes('while')) && 
+                            line.includes('{') === false && line.includes('}') === false) {
+                            result += `<span class='warning'>${currentLang === 'ar' ? 'تحذير في السطر' : 'Warning at line'} ${lineNumber}: ${currentLang === 'ar' ? 'قد تحتاج إلى إضافة أقواس {}' : 'You may need to add braces {}'}</span>\n`;
+                            hasWarning = true;
+                        }
+                        if (line.includes('console.log') && !line.includes(')')) {
+                            result += `<span class='error'>${currentLang === 'ar' ? 'خطأ في السطر' : 'Error at line'} ${lineNumber}: ${currentLang === 'ar' ? 'قوس غير مغلق في console.log' : 'Unclosed parenthesis in console.log'}</span>\n`;
+                            hasError = true;
+                        }
+                    }
+                }
+                
+                // إذا لم يتم اكتشاف أخطاء
+                if (!hasError && !hasWarning) {
+                    result = `<span class='success'>${currentLang === 'ar' ? '✓ لا توجد أخطاء! الكود جاهز للتشغيل.' : '✓ No errors! Code is ready to run.'}</span>`;
+                    setStatus(translations[currentLang].noErrors, "status-success");
+                } else if (hasError) {
+                    setStatus(translations[currentLang].hasErrors, "status-error");
+                } else if (hasWarning) {
+                    setStatus(translations[currentLang].hasWarnings, "status-checking");
+                }
+                
+                // إذا لم يتم كتابة أي كود
+                if (code.trim() === "") {
+                    result = `<span class='warning'>${currentLang === 'ar' ? 'لم تقم بكتابة أي كود للفحص' : 'You did not write any code to check'}</span>`;
+                    setStatus(translations[currentLang].noCode, "status-ready");
+                }
+                
+                output.innerHTML = result;
+            }, 1500);
+        }
+        
+        // محاكاة تشغيل الكود
+        function runCode(code, language) {
+            const output = document.getElementById('output');
+            
+            output.innerHTML = `<span class='success'>${currentLang === 'ar' ? 'جاري تنفيذ الكود...' : 'Running code...'}</span>`;
+            setStatus(translations[currentLang].running, "status-checking");
+            
+            // محاكاة عملية التشغيل
+            setTimeout(() => {
+                let result = "";
+                
+                if (code.trim() === "") {
+                    result = `<span class='warning'>${currentLang === 'ar' ? 'لم تقم بكتابة أي كود للتشغيل' : 'You did not write any code to run'}</span>`;
+                    setStatus(translations[currentLang].noCode, "status-ready");
+                } else if (language === 'python') {
+                    result = `<span class='success'>${currentLang === 'ar' ? 'نتيجة التنفيذ:' : 'Execution result:'}</span>\n${currentLang === 'ar' ? 'مرحباً مصمم الموقع' : 'Hello, World!'}\n\n<span class='success'>✓ ${currentLang === 'ar' ? 'تم التنفيذ بنجاح!' : 'Executed successfully!'}</span>`;
+                    setStatus(translations[currentLang].success, "status-success");
+                } else if (language === 'javascript') {
+                    result = `<span class='success'>${currentLang === 'ar' ? 'نتيجة التنفيذ:' : 'Execution result:'}</span>\nHello, World!\n\n<span class='success'>✓ ${currentLang === 'ar' ? 'تم التنفيذ بنجاح!' : 'Executed successfully!'}</span>`;
+                    setStatus(translations[currentLang].success, "status-success");
+                } else {
+                    result = `<span class='success'>${currentLang === 'ar' ? 'نتيجة التنفيذ:' : 'Execution result:'}</span>\n${currentLang === 'ar' ? 'تم تنفيذ الكود بنجاح' : 'Code executed successfully'}\n\n<span class='success'>✓ ${currentLang === 'ar' ? 'تم التنفيذ بنجاح!' : 'Executed successfully!'}</span>`;
+                    setStatus(translations[currentLang].success, "status-success");
+                }
+                
+                output.innerHTML = result;
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
